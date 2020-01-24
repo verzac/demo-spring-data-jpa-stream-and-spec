@@ -1,0 +1,8 @@
+spring:
+  liquibase:
+    change-log: classpath:/db/changelog/local/changelog-local.xml
+    drop-first: true # for demo, remove this if you want to
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres
+    username: postgres
+    password: yourSuperSecretPassword

@@ -1,0 +1,10 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+           http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+    <include file="../changelog-master.xml" relativeToChangelogFile="true"/>
+    <changeSet author="verzac" id="1">
+        <sqlFile relativeToChangelogFile="true" path="seed-customer-data.sql" stripComments="true" splitStatements="true" />
+    </changeSet>
+</databaseChangeLog>
