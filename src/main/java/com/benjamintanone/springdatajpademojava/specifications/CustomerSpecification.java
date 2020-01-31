@@ -9,6 +9,7 @@ public abstract class CustomerSpecification {
         if (name == null) {
             return null;
         }
+        // SELECT ... FROM Customer c WHERE c.name LIKE %name%;
         return (root, query, criteriaBuilder) -> criteriaBuilder.like(root.get("name"), String.format("%%%s%%", name));
     }
 }

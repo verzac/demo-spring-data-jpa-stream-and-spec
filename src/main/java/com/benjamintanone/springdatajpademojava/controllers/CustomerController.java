@@ -4,6 +4,9 @@ import com.benjamintanone.springdatajpademojava.domain.Customer;
 import com.benjamintanone.springdatajpademojava.repositories.CustomerRepository;
 import com.benjamintanone.springdatajpademojava.specifications.CustomerSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,10 +37,16 @@ public class CustomerController {
         return String.format("%d,%s\n", customer.getId(), customer.getName());
     }
 
-    private void writeCustomersToResponseAsCsv(Stream<Customer> customerStream,
-                                final HttpServletResponse response) throws IOException {
+    private void setCsvParams(final HttpServletResponse response) {
+        // not important; basically sets csv params so clients can understand it's a csv
         response.setContentType("application/csv");
         response.setHeader("Content-Disposition", "attachment;filename=customers.csv");
+    }
+
+    @Transactional // doesn't do anything; just a reminder that this requires a transaction
+    private void writeCustomersToResponseAsCsv(Stream<Customer> customerStream,
+                                final HttpServletResponse response) throws IOException {
+        setCsvParams(response);
         PrintWriter printWriter = response.getWriter();
         printWriter.write("id,name\n"); // the CSV column header, not really important here
         customerStream.peek(customer -> printWriter.write(getCsvRowFromCustomer(customer)))
@@ -54,5 +63,23 @@ public class CustomerController {
     ) throws IOException {
         Specification<Customer> specification = CustomerSpecification.hasName(name);
         writeCustomersToResponseAsCsv(customerRepository.stream(specification, Customer.class), response);
+    }
+
+    @GetMapping("/customers_page_by_page.csv")
+    public void getCustomersCsvPageByPage(
+            final HttpServletResponse response,
+            @RequestParam(required = false) final String name
+    ) throws IOException {
+        setCsvParams(response);
+        PrintWriter printWriter = response.getWriter();
+        Specification<Customer> specification = CustomerSpecification.hasName(name);
+        Page<Customer> customerPage;
+        int page = 0;
+        do {
+            customerPage = customerRepository.findAll(specification, PageRequest.of(page, 10));
+            customerPage.getContent()
+                    .forEach(customer -> printWriter.write(getCsvRowFromCustomer(customer)));
+            page++;
+        } while (customerPage.hasNext());
     }
 }

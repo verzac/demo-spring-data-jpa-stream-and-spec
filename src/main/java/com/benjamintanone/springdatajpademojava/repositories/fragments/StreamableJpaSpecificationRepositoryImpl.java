@@ -9,6 +9,8 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import java.util.stream.Stream;
 
+import static org.hibernate.jpa.QueryHints.HINT_FETCH_SIZE;
+
 public class StreamableJpaSpecificationRepositoryImpl<T> implements StreamableJpaSpecificationRepository<T> {
     @Autowired
     private EntityManager entityManager;
@@ -24,7 +26,7 @@ public class StreamableJpaSpecificationRepositoryImpl<T> implements StreamableJp
             criteriaQuery.where(specification.toPredicate(root, criteriaQuery, criteriaBuilder));
         }
         return entityManager.createQuery(criteriaQuery)
-                // .setHint(HINT_FETCH_SIZE, "0") // OPTIONAL - depends on your DB implementation
+                .setHint(HINT_FETCH_SIZE, "1") // depends on your DB implementation; MySQL expects "" + Integer.MIN_VALUE
                 .getResultStream();
     }
 }
