@@ -3,27 +3,23 @@ package com.benjamintanone.springdatajpademojava.controllers;
 import com.benjamintanone.springdatajpademojava.domain.Customer;
 import com.benjamintanone.springdatajpademojava.repositories.CustomerRepository;
 import com.benjamintanone.springdatajpademojava.specifications.CustomerSpecification;
+import org.aspectj.weaver.patterns.HasThisTypePatternTriedToSneakInSomeGenericOrParameterizedTypePatternMatchingStuffAnywhereVisitor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import javax.persistence.EntityManager;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 @RestController
 public class CustomerController {
@@ -43,7 +39,6 @@ public class CustomerController {
         response.setHeader("Content-Disposition", "attachment;filename=customers.csv");
     }
 
-    @Transactional // doesn't do anything; just a reminder that this requires a transaction
     private void writeCustomersToResponseAsCsv(Stream<Customer> customerStream,
                                 final HttpServletResponse response) throws IOException {
         setCsvParams(response);
@@ -81,5 +76,14 @@ public class CustomerController {
                     .forEach(customer -> printWriter.write(getCsvRowFromCustomer(customer)));
             page++;
         } while (customerPage.hasNext());
+    }
+
+    @GetMapping("/customer_findall")
+    public String getCustomersCsvPageByPage(final HttpServletResponse response) {
+        setCsvParams(response);
+        Iterable<Customer> customers = customerRepository.findAll(CustomerSpecification.hasName(""));
+        return StreamSupport.stream(customers.spliterator(), false)
+                .map(customer -> String.format("%d,%s", customer.getId(), customer.getName()))
+                .collect(Collectors.joining("\n"));
     }
 }
